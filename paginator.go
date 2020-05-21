@@ -1,4 +1,4 @@
-package greet
+package elasticPagination
 
 import "fmt"
 
