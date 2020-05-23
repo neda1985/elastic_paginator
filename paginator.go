@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func paginate(writer http.ResponseWriter, limit int, currentPage int, r esapi.Response) {
+func Paginate(writer http.ResponseWriter, limit int, currentPage int, r esapi.Response) {
 	var (
 		m map[string]interface{}
 	)
