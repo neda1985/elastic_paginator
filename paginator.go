@@ -12,6 +12,7 @@ func Paginate(writer http.ResponseWriter, limit int, currentPage int, r esapi.Re
 	var (
 		m map[string]interface{}
 	)
+	
 	if r.IsError() {
 		var e errorResponse
 		if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
