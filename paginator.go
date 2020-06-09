@@ -56,17 +56,21 @@ func Resolve(limit, currentPage int, res io.ReadCloser) (*Result, error) {
 			ItemPerPage: limit,
 			CurrentPage: currentPage,
 			TotalItem:   tp,
-			LastPage:    tp,
+			LastPage:    int(math.Ceil(float64(tp) / float64(limit))),
 			TotalPages:  int(math.Ceil(float64(tp) / float64(limit))),
 		},
 	}
-	items := make([]interface{}, 0)
 	if currentPage > r.PaginationData.TotalPages {
 		return r, nil
 	}
+	items := make([]interface{}, 0)
 	for i := range s.Hits.Hits {
 		items = append(items, s.Hits.Hits[i].Source)
 	}
-	r.Items = items
+	if currentPage*limit > len(items) {
+		r.Items = items[currentPage*(limit)-limit:]
+		return r, nil
+	}
+	r.Items = items[(currentPage*limit)-limit : currentPage*limit]
 	return r, nil
 }
