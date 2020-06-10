@@ -2,6 +2,7 @@ package pagination
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -51,22 +52,30 @@ func Resolve(limit, currentPage int, res io.ReadCloser) (*Result, error) {
 		return nil, err
 	}
 	tp := s.Hits.Total.Value
+	if tp < 1 {
+		return nil, fmt.Errorf("no result")
+	}
 	r := &Result{
 		PaginationData: pagination{
 			ItemPerPage: limit,
 			CurrentPage: currentPage,
 			TotalItem:   tp,
-			LastPage:    tp,
+			LastPage:    int(math.Ceil(float64(tp) / float64(limit))),
 			TotalPages:  int(math.Ceil(float64(tp) / float64(limit))),
 		},
 	}
+
 	items := make([]interface{}, 0)
-	if currentPage > r.PaginationData.TotalPages {
-		return r, nil
-	}
 	for i := range s.Hits.Hits {
 		items = append(items, s.Hits.Hits[i].Source)
 	}
-	r.Items = items
+	if currentPage > r.PaginationData.TotalPages || len(items) == 0 {
+		return r, nil
+	}
+	if currentPage*limit > len(items) {
+		r.Items = items[currentPage*(limit)-limit:]
+		return r, nil
+	}
+	r.Items = items[(currentPage*limit)-limit : currentPage*limit]
 	return r, nil
 }
