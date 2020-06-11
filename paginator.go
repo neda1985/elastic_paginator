@@ -23,9 +23,6 @@ type pagination struct {
 }
 
 type hits struct {
-	Total struct {
-		Value int `json:"value,omitempty"`
-	} `json:"total,omitempty"`
 	Hits   []*hits     `json:"hits,omitempty"`
 	Source interface{} `json:"_source,omitempty"`
 }
@@ -51,7 +48,12 @@ func Resolve(limit, currentPage int, res io.ReadCloser) (*Result, error) {
 	if err = json.NewDecoder(res).Decode(s); err != nil {
 		return nil, err
 	}
-	tp := s.Hits.Total.Value
+
+	items := make([]interface{}, 0)
+	for i := range s.Hits.Hits {
+		items = append(items, s.Hits.Hits[i].Source)
+	}
+	tp := len(items)
 	if tp < 1 {
 		return nil, fmt.Errorf("no result")
 	}
@@ -65,10 +67,6 @@ func Resolve(limit, currentPage int, res io.ReadCloser) (*Result, error) {
 		},
 	}
 
-	items := make([]interface{}, 0)
-	for i := range s.Hits.Hits {
-		items = append(items, s.Hits.Hits[i].Source)
-	}
 	if currentPage > r.PaginationData.TotalPages || len(items) == 0 {
 		return r, nil
 	}
